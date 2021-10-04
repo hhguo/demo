@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>A Multi-Scale Time-Frequency Spectrogram Discriminator for GAN-based Non-Autoregressive TTS</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="jquery-3.5.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div id="text1">A Multi-Scale Time-Frequency Spectrogram Discriminator <br> for GAN-based Non-Autoregressive TTS
+        </div>
+        <div id="intro">
+            <br>
+            <p>
+                Haohan Guo, Hui Lu, Xixin Wu, Helen Meng
+            </p>
+            <p>Submitted to <i>ICASSP 2022</i>
+            </p>
+            <!-- <p>
+            [<a href="https://arxiv.org/abs/2104.00355">Paper</a>]
+        </p> -->
+        </div>
+    </div>
+    <div class="content-container">
+        <img src="fig.png" style="width:70%">
+        <p>
+            Generative adversarial network (GAN) has been validated as an useful approach to improve non-autoregressive
+            TTS by adversarial training with an extra model discriminating the real and the generated speech. For
+            effective training process, a powerful discriminator is always needed to capture rich difference between
+            them. In this paper, a multi-scale time-frequency discriminator is proposed to enhance TTS to generate more
+            realistic Mel-spectrogram. It operates the spectrogram as a 2D image to exploit the correlation of different
+            components in time domain and frequency domain. And it employs the encoder-decoder based U-Net to capture
+            richer information at different scales. Subjective tests are conducted to verify its effectiveness. Both of
+            multi-scale and time-frequency discriminating show significant improvement in preference test. Besides, the
+            MOS test shows that TTS trained with it can already perform well even if the vocoder is not fine-tuned on
+            TTS outputs. Finally, the visualization of discriminator outputs is performed to validate that
+            low-resolution and high-resolution information are both utilized.
+        </p>
+        <br />
+    </div>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- <div class="content-container">
+        <script src="wavesurfer.js"></script>
+        <div class="content-title">Example</div>
+
+        <table border="0" class="inlineTable">
+            <tr>
+                <th style="width:30px">Original</th>
+                <td>
+                    <div id="original_header_waveform"></div>
+                    <button id="original_header" class="play-button-demo btn btn-primary"
+                        onclick="wavesurfer_original.playPause()">
+                        <i class="fa fa-play"></i>
+                        Play
+                        /
+                        <i class="fa fa-pause"></i>
+                        Pause
+                    </button>
+                    <script>
+                        var wavesurfer_original = WaveSurfer.create({
+                            container: '#original_header_waveform',
+                            waveColor: 'violet',
+                            progressColor: 'purple'
+                        });
+                        wavesurfer_original.load('./audio/example/original.wav');
+                    </script>
+                </td>
+                <th style="width:30px">Griffin-Lim</th>
+                <td>
+                    <div id="gf_header_waveform"></div>
+                    <button id="gf_header" class="play-button-demo btn btn-primary"
+                        onclick="wavesurfer_gf.playPause()">
+                        <i class="fa fa-play"></i>
+                        Play
+                        /
+                        <i class="fa fa-pause"></i>
+                        Pause
+                    </button>
+                    <script>
+                        var wavesurfer_gf = WaveSurfer.create({
+                            container: '#gf_header_waveform',
+                            waveColor: 'violet',
+                            progressColor: 'purple'
+                        });
+                        wavesurfer_gf.load('./audio/example/as_gf.wav');
+                    </script>
+                </td>
+                <th style="width:30px">HifiGAN</th>
+                <td>
+                    <div id="hifigan_header_waveform"></div>
+                    <button id="hifigan_header" class="play-button-demo btn btn-primary"
+                        onclick="wavesurfer_hifigan.playPause()">
+                        <i class="fa fa-play"></i>
+                        Play
+                        /
+                        <i class="fa fa-pause"></i>
+                        Pause
+                    </button>
+                    <script>
+                        var wavesurfer_hifigan = WaveSurfer.create({
+                            container: '#hifigan_header_waveform',
+                            waveColor: 'violet',
+                            progressColor: 'purple'
+                        });
+                        wavesurfer_hifigan.load('./audio/example/as_hifigan.wav');
+                    </script>
+                </td>
+                <td style="width:30px"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th colspan='2'>Vocoder</th>
+                <th>w/o GAN</th>
+                <th>Single-Scale Time</th>
+                <th>Multi-Scale Time</th>
+                <th>Multi-Scale Time-Frequency</th>
+            </tr>
+            <tr>
+            </tr>
+            <tr>
+                <th colspan='2'></th>
+                <th>w/o GAN & fine-tuning</th>
+                <th>w/ fine-tuning</th>
+                <th>w/ GAN</th>
+                <th>w/ GAN & fine-tuning</th>
+            </tr>
+            <tr>
+            </tr>
+        </table>
+    </div> -->
+
+    <div class="content-container">
+        <div class="content-title">Samples</div>
+        <div id='descript'>
+        </div>
+        <div id='legend'>
+            <ul style="list-style-type:circle">
+            </ul>
+        </div>
+        <!-- <div class="option-div">
+            <label for="dataset">Choose a dataset:</label>
+            <select id="dataset" onchange=record(this)>
+                <option value=vctk>VCTK</option>
+                <option value=ljspeech>LJ</option>
+            </select>
+        </div> -->
+        <div class="option-div" id="tests-div">
+            <label for="tests">Choose test:</label>
+            <select id="tests" onchange=record(this)>
+                <option value="discriminator">Discriminator</option>
+                <option value="finetune">Finetune</option>
+            </select>
+        </div>
+        <div id="result-div"></div>
+    </div>
+
+    <div id="loading-status">Loading......</div>
+
+    <script>
+        var mode = 0;
+        var audio;
+        var filename = null;
+        function play(file_name) {
+            if (filename !== file_name) {
+                if (audio) {
+                    audio.pause();
+                }
+
+                audio = new Audio(file_name);
+                filename = file_name;
+                audio.play();
+            } else {
+                if (audio.paused) {
+                    audio = new Audio(file_name);
+                    filename = file_name;
+                    audio.play();
+                } else {
+                    audio.pause();
+                }
+            }
+        }
+        function switchMode() {
+            if (document.getElementById("myonoffswitch").checked) {
+                mode = 0;
+            }
+            else {
+                mode = 1;
+            }
+        }
+    </script>
+
+    <script>
+        /* Highlights the navigation bar button corresponding to page
+        to indicate which page a user is currently viewing.
+        */
+        var dataset = "ljspeech";
+        var tasks = "tts";
+        var tests = 'discriminator';
+
+        var tests_to_methods = {
+            "discriminator": ['s_t', 'm_t', 'm_tf'],
+            "finetune": ['ngf', 'fin', 'gan', 'gf'],
+        };
+
+        var method_to_hdr = {
+            "ref": "Reference",
+            "s_t": "single-scale time",
+            "m_t": "multi-scale time",
+            "m_tf": "multi-scale time-frequency",
+            'ngf': "w/o GAN & Fine-tune",
+            'fin': "w/ Fine-tune",
+            'gan': "w/ GAN",
+            'gf': "w/ GAN & Fine-tune",
+        };
+
+        var id_list = [
+            "LJ001-0116",
+            "LJ002-0007",
+            "LJ002-0013",
+            "LJ003-0316",
+            "LJ004-0230",
+            "LJ005-0171",
+            "LJ005-0227",
+            "LJ006-0039", 
+            "LJ006-0200",
+            "LJ006-0202",
+        ];
+
+        var file_lists = {
+            "ljspeech_tts_discriminator": id_list,
+            "ljspeech_tts_finetune": id_list,
+        };
+
+        // var root = 'https://dl.fbaipublicfiles.com/speechbot/demo_samples';
+        var root = './audio';
+
+        function lock() {
+            $('#dataset').attr('disabled', 'disabled');
+            $('#tasks').attr('disabled', 'disabled');
+            $('#tests').attr('disabled', 'disabled');
+            $('#loading-status').show();
+        }
+        function unlock() {
+            $('#dataset').removeAttr('disabled');
+            $('#tasks').removeAttr('disabled');
+            $('#tests').removeAttr('disabled');
+            $('#loading-status').hide();
+        }
+
+        function preload(dataset, tasks, tests, push) {
+            lock();
+            $('#tasks').val(tasks);
+            $('#tests').val(tests);
+            $("#result-div").empty();
+            $("#result-div").append(createTable());
+            unlock();
+        }
+
+        preload(dataset, tasks, tests, true);
+
+        function createTable() {
+            var tableElem;
+            tableElem = document.createElement('table');
+            if (tasks === 'tts') {
+                return tts(tableElem);
+            }
+        }
+
+        function tts(tableElem) {
+            var headline, colElem, rowElem;
+
+            headline = document.createElement('tr');
+
+            colElem = document.createElement('td');
+            colElem.appendChild(document.createTextNode('ID'));
+            colElem.style.color = 'rgb(6, 150, 200)';
+            colElem.style.center = true;
+            headline.appendChild(colElem);
+
+            colElem = document.createElement('td');
+            // colElem.appendChild(document.createTextNode('Task'));
+            // colElem.style.color = 'rgb(6, 150, 200)';
+            // colElem.style.center = true;
+            headline.appendChild(colElem);
+
+            methods = tests_to_methods[tests];
+            console.log(tests);
+            console.log(tests_to_methods);
+            console.log(methods);
+            for (var ii = 0; ii < methods.length; ii++) {
+                colElem = document.createElement('td');
+                colElem.appendChild(document.createTextNode(method_to_hdr[methods[ii]]));
+                colElem.style.color = 'rgb(6, 150, 200)';
+                colElem.style.center = true;
+                colElem.style.whiteSpace = 'pre';
+                headline.appendChild(colElem);
+            }
+
+            tableElem.appendChild(headline);
+
+            var bg_color = 'white';
+            var txt_color = 'rgb(6, 150, 200)';
+
+            var file_list = file_lists[dataset + "_" + tasks + "_" + tests];
+            var N = file_list.length;
+            for (var j = 0; j < N; j++) {
+                rowElem = document.createElement('tr');
+                rowElem.style.backgroundColor = bg_color;
+
+                colElem = document.createElement('td');
+                colElem.appendChild(document.createTextNode(j.toString()));
+                colElem.style.color = txt_color;
+                colElem.style.center = true;
+                rowElem.appendChild(colElem);
+
+                colElem = document.createElement('td');
+                rowElem.appendChild(colElem);
+
+                for (var ii = 0; ii < methods.length; ii++) {
+                    colElem = document.createElement('td');
+                    // var x = document.createElement("input");
+                    // x.setAttribute("type", "button");
+                    // x.setAttribute("value", "PLAY");
+                    // x.setAttribute("onclick", "play('" + root + "/" + tasks + "/" + dataset + "/" + methods[ii] + "/" + file_list[j] + ".wav')");
+                    // colElem.appendChild(x);
+                    // colElem.style.color = txt_color;
+                    // colElem.style.center = true;
+                    audio_path = root + "/" + tasks + "/" + tests + "/"  + dataset + "/" + methods[ii] + "/" + file_list[j] + ".wav"
+                    audio_html = "<audio name=\"audio_" + (j * methods.length + ii).toString() + "\" controls=\"\"><source src=\"" + audio_path + "\" type=\"audio/mpeg\" /></audio>";
+                    colElem.innerHTML = audio_html;
+                    rowElem.appendChild(colElem);
+                }
+
+                tableElem.appendChild(rowElem);
+
+                if ((j + 1) % 10 === 0) {
+                    flip = bg_color
+                    bg_color = txt_color;
+                    txt_color = flip;
+                }
+            }
+
+            return tableElem;
+        }
+
+        function fetch_result() {
+            $(window).ready(function () {
+                // dataset = $("#dataset").val();
+                
+                // tasks = $("#tasks").val();
+                // $("#tasks").empty();
+                // $("#tasks").append('<option value="resynthesis">Resynthesis</option>');
+                // $("#tasks").append('<option value="voice_conversion">Voice Conversion</option>');
+                // $("#tasks").append('<option value="codec">Codec (Unseen Speakers)</option>');
+                // $("#tasks").val(""tasks"");
+                
+                tests = $("#tests").val();
+                
+                $("#result-div").empty();
+                $("#result-div").append(createTable());
+                unlock();
+            });
+        }
+
+        function record(sel) {
+            lock();
+            fetch_result();
+        }
+
+        window.addEventListener('popstate', function (e) {
+            preload(e.state["dataset"], e.state["tasks"], e.state["tests"], false);
+        });
+    </script>
+
+    <div class="content-container">
+        Sample paged based on <a style="color:rgb(6, 150, 200)"
+            href="https://daps.cs.princeton.edu/projects/HiFi-GAN/index.php"> HiFi-GAN</a> page.
+    </div>
+</body>
+
+</html>
